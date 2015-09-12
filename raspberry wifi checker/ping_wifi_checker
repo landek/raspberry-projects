@@ -1,0 +1,63 @@
+#!/bin/bash
+
+echo "---- STARTING ------" >> ping_wifi.log
+echo `date` >> ping_wifi.log
+
+IP='10.0.0.1'
+COUNTER=0
+RESET_BUSY=0
+
+while true
+do
+	ping -c 1 $IP 2>/dev/null 1>/dev/null
+	if [ "$?" = 0 ]
+	then
+		if [ $COUNTER -ge 5 ]
+		then
+		  echo "------ WORKS AFTER RESET --------" >> ping_wifi.log
+		  echo " $COUNTER "
+		  echo "Restart"
+		  echo "Restart" >> ping_wifi.log
+		  echo `date` >> ping_wifi.log
+		  echo `ifconfig` >> ping_wifi.log
+		  RESET_BUSY=0
+		fi
+ 		COUNTER=0
+	else
+	  COUNTER=$[$COUNTER +1]
+	  if [ $COUNTER -ge 2 ]
+	  then
+	    echo "--------------------" >> ping_wifi.log
+	    echo "Host not found" >> ping_wifi.log
+	    echo "Host not found"
+	    date
+	    echo "Counter: $COUNTER "
+	    echo `date` >> ping_wifi.log
+	    echo "Counter: $COUNTER " >> ping_wifi.log
+	  fi
+	fi
+	if [ $COUNTER -ge 5 ]
+	then
+	  COUNTER=$[$COUNTER +1]
+	  echo "--------------------" >> ping_wifi.log
+	  echo `date` >> ping_wifi.log
+	  echo `ifconfig` >> ping_wifi.log
+	  if [ $RESET_BUSY = 0 ]
+	  then
+		  RESET_BUSY=1
+		  echo "   try reconnect" >> ping_wifi.log
+		  sudo ifdown wlan0
+		  sleep 5
+		  sudo ifup --force wlan0
+	  fi
+	  echo `date` >> ping_wifi.log
+	  echo `ifconfig` >> ping_wifi.log
+	  if [ $COUNTER -ge 65 ]
+	  then
+		echo " RESET COUNTERS, try another reconnect" >> ping_wifi.log
+		RESET_BUSY=0
+		COUNTER=3
+	  fi
+	fi
+	sleep 1
+done
